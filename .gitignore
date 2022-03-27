@@ -2,6 +2,8 @@ tokens.py
 
 .idea/
 
+CIFH_heroku/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

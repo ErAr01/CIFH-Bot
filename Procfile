@@ -1,1 +1,0 @@
-worker: python CIFH_Bot.py
