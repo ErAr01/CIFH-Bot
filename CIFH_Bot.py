@@ -25,17 +25,18 @@ def main_function(info):
 
     for d in info:
         if len(info) == 1 or d.get('type') == 'MDPZ':
-            return 'Летай спокойно, но не выше ' + str(info[0].get('alts').get('range')[-1]) + ' метров'  # Максимальная высота свободной зоны полета
+            return 'Летать можно. Но не выше 150 метров от поверхности, без установления местного режима'
 
         elif d.get('type') == 'CTRZ' and d.get('alts').get('range')[0] == 0:  # Проверка на диспетчерскую зону
-            return 'Летать можно только с разрешения: ' + str(d.get('name'))
+            return 'Летать от земли до ' + str(info[0].get('alts').get('range')[-1]) + ' можно только с разрешения: ' + str(d.get('name')) + ', при установлении местного режима'
 
         elif d.get('type') == 'CTRZ' and d.get('alts').get('range')[0] != 0:  # Проверка на диспетчерский район
-            return 'Летать без разрешения можно не выше ' + str(d.get('alts').get('range')[0]) + ' метров от поверхности. ' + 'Выше ' + str(d.get('alts').get('range')[0]) + ' метров от поверхности, летать можно только с разрешения: ' + str(d.get('name'))
-
-
-async def on_startup(_):
-    print('Я вышел в онлайн, бот')
+            if int(info[0].get('alts').get('range')[0]) >= 150:
+                return 'Летать можно. Но не выше 150 метров от поверхности, без установления местного режима \nОт ' + str(info[0].get('alts').get('range')[0]) \
+                       + ' до ' + str(info[0].get('alts').get('range')[-1]) + ' только с разрешения ' + str(d.get('name'))
+            else:
+                return 'Летать можно не выше ' + str(info[0].get('alts').get('range')[0]) + ' без установления местного режима \nОт ' + str(info[0].get('alts').get('range')[0]) \
+                       + ' до ' + str(info[0].get('alts').get('range')[-1]) + ' только с разрешения ' + str(d.get('name'))
 
 
 b1 = KeyboardButton('Отправить геопозицию', request_location=True)
@@ -44,9 +45,19 @@ kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_client.add(b1).add(b2)
 
 
+async def on_startup(_):
+    print('Я вышел в онлайн, бот')
+
+
 @dp.message_handler(commands=['start', 'help'])
 async def command_start(message: types.Message):
-    await message.answer('Привет, я помогу тебе определить местность для полёта! Отправь мне геолокацию или координаты (долгота, широта):', reply_markup=kb_client)
+    await message.answer('Приветствую, данный бот поможет тебе определиться с местом для полета на квадрокоптере. Отправь мне геолокацию или координаты (долгота, широта):')
+    await message.answer('Вот еще несколько команд, которые могут тебе помочь: \n/notification - Дисклеймер (Прочитай обязательно!) \n/register - регистрация дрона \n/rules - правила полета, которые нужно знать', reply_markup=kb_client)
+
+
+@dp.message_handler(commands=['notification'])
+async def command_notification(message: types.Message):
+    await message.answer('Помни, что данный бот разработан на базе сайта fpln.ru и не предназначен для замены сертифицированных навигационных устройств! База данных воздушного пространства предоставляется исключительно в информационных целях. \nТак же следует знать, что согласно Постановлению от 03.02.2020 № 74 беспилотник может летать не выше 150 метров от поверхности, без установления временного или местного режима, для просмотра максимальных границ зон полета введи /full_info')
 
 
 @dp.message_handler(content_types=['location'])
